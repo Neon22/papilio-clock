@@ -12,15 +12,17 @@
 
 
 CLOCKIN = 320 # MHz. The clock frequency supplied to the FPGA
-# possibly turn these into dictioanry so coudl have diff devices.
+
+# possibly turn these into a dictionary so can support different devices.
 # is papilio plus, duo different ?
 DCM_CLOCKDIV_RATIOS = [1.5,2,2.5,3,3.5,4,4.5,5,5.5,6,6.5,7,7.5,8,9,10,11,12,13,14,15,16]
 DCM_SYNTH_DIVIDE_MAX = 32
 
-### UI compnent
+### GUI component
 from Tkinter import *
 import sys
-        
+
+
 class App: # Build a simple UI
     def __init__(self, master):
         # setup entry field, calculate button and report.
@@ -128,6 +130,7 @@ def find_best_multipliers(desired_freq, clkin=CLOCKIN):
     return result
         
 def collate_output(desired, result):
+    " Present the result list usefully "
     message = ""
     for r in result:
         error = abs(r[0]-desired)
@@ -135,13 +138,13 @@ def collate_output(desired, result):
     return message
 
 
-### Coment out the UI section if you want this simpler...
+###
 if __name__ == '__main__':
     # check argv to see if being called by command line - in which case demand two args and ignore UI
     print sys.argv, len(sys.argv)
     if len(sys.argv) == 2:
         # print usage
-        print "Usage: papillio_clock clock_freq desired_freq"
+        print "Usage: papilio_clock clock_freq desired_freq"
     if len(sys.argv) == 3:
         # called from command line - ignore UI
         CLOCKIN = float(sys.argv[1])
@@ -150,7 +153,7 @@ if __name__ == '__main__':
         result = find_best_multipliers(desired)
         print collate_output(desired, result)
     else:
-        # UI based version
+        # GUI based version
         root = Tk()
         app = App(root)
         root.mainloop()
