@@ -175,9 +175,14 @@ def find_best_multipliers(desired_freq, clocks):
                     j += 1
             break
     # gather nicely
-    temp = low
-    if high[0][0] != low[0][0]: # cleanup if first clock
-        temp.extend(high)
+    # forget low if high error == 0. I.e. exact match to desired
+    if high[0][0] - desired_freq ==0:
+        temp = high
+    else:
+        # no exact match - show low and high
+        temp = low
+        if high[0][0] != low[0][0]: # cleanup if first clock
+            temp.extend(high)
     #remove duplicates
     result = []
     for i in temp:
@@ -198,10 +203,10 @@ def collate_output(desired, result, clocks, base_clk):
         if CLOCKIN == r[-1]:
             message += "\nFor %s MHz. %s  Use: %s. %s." % (r[0], error, r[1], r[2])
         else:
-            message += "\n- For %s MHz. %s  Use: %s. %s from %f MHz." % (r[0], error, r[1], r[2], r[-1])
+            message += "\nFor %s MHz. %s  Use: %s. %s from %f MHz." % (r[0], error, r[1], r[2], r[-1])
             sources = find_base_frequency(r[-1], clocks, base_clk)
             for s in sources:
-                message += "\n    For %s MHz. %s  Use: %s. %s." % (s[0], error, s[1], s[2])
+                message += "\n    - For %s MHz. %s  Use: %s. %s." % (s[0], error, s[1], s[2])
     return message
 
 
