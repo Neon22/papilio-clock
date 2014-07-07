@@ -11,7 +11,7 @@
 ### Derived from http://www.xilinx.com/support/documentation/user_guides/ug382.pdf
 
 
-CLOCKIN = 320 # MHz. The clock frequency supplied to the FPGA
+CLOCKIN = 32 # MHz. The clock frequency supplied to the FPGA
 
 # possibly turn these into a dictionary so can support different devices.
 # is papilio plus, duo different ?
@@ -29,25 +29,37 @@ class App: # Build a simple UI
     def __init__(self, master):
         # setup entry field, calculate button and report.
         master.title("Papilio Clock helper")
-        frame = Frame(master)
-        frame.pack()
-##        self.label_clk.set("Source \n\n")
-        self.reportvar = StringVar()
-        self.reportvar.set("Choose a frequency\n\n")
-
-        L1 = Label(frame, text="Source")
+        # Top frame
+        topframe = Frame(master)
+        topframe.pack()
+        label  = "The Spartan6 FPGA has clock modules composed of two DCM units and a PLL."
+        #label += "\nThe DCM units can be chained together."
+        label += "\nThis helper calculates the ways a desired clock can be generated using one or both DCMs."
+        label += "\nIt shows the exact clock if possible. Or the clocks below and above if not."
+        label += "\n(If window overflows - consult console for full list)"
+        Ltop = Label(topframe, text=label)
+        Ltop.pack(side=LEFT)
+        inputframe = Frame(master)
+        inputframe.pack()
+        # Input frame
+        L1 = Label(inputframe, text="Source Clock")
         L1.pack(side=LEFT)
-        self.clkin = Entry(frame, width=20)
+        self.clkin = Entry(inputframe, width=20)
         self.clkin.insert(0, CLOCKIN)
         self.clkin.pack(side=LEFT)
-        L2 = Label(frame, text="Desired frequency")
+        L2 = Label(inputframe, text="Desired frequency")
         L2.pack(side=LEFT)
-        self.desired = Entry(frame, width=20)
+        self.desired = Entry(inputframe, width=20)
         self.desired.pack(side=LEFT)
-
-        self.calc = Button(frame, text="Calculate", command=self.calculate)
+        # Button frame
+        buttonframe = Frame(master)
+        buttonframe.pack()
+        self.calc = Button(buttonframe, text="Calculate", command=self.calculate)
         self.calc.pack(side=LEFT)
         self.desired.bind("<Return>", self.calculate)
+        #
+        self.reportvar = StringVar()
+        self.reportvar.set("Choose a desired frequency\n\n")
         self.report = Label(master, width=150, justify=LEFT,
                             textvariable=self.reportvar)
         self.report.pack(side=BOTTOM)
@@ -70,13 +82,14 @@ class App: # Build a simple UI
         if success:
             if len(self.clocks) == 0 or self.lastclk != clkin:
                 # make/remake if input values change
-                self.clocks = calc_possible_twolayer_clocks(clkin)
+                self.clocks, self.single = calc_possible_twolayer_clocks(clkin)
+                self.single.sort()
                 self.clocks.sort()
                 self.lastclk = clkin
             result = find_best_multipliers(desired, self.clocks)
             #sort results by r[1] and display as label
-            label = "Desired Frequency = %s\n\n" % desired
-            label += collate_output(desired, result, self.clocks, clkin)
+            label = "Desired Frequency = %s\n" % desired
+            label += collate_output(desired, result, self.single, clkin)
             self.reportvar.set(label)
             print label # if you want to cut and paste
         
@@ -122,7 +135,7 @@ def calc_possible_twolayer_clocks(clkin=CLOCKIN):
     for c in direct_clocks:
         pass2 = calc_possible_clocks(c[0])
         clocks.extend(pass2)
-    return clocks
+    return clocks, direct_clocks
 
 def find_base_frequency(desired_freq, freqs, base_clk):
     """ look for desired_freq made from base clockin
@@ -223,14 +236,15 @@ if __name__ == '__main__':
         desired = float(sys.argv[2])
         print "Desired Frequency = %s" % desired
         #
-        clocks = calc_possible_twolayer_clocks(clkin)
+        clocks, single = calc_possible_twolayer_clocks(clkin)
         print "%s clocks evaluated" % (len(clocks))
         #print clocks[0]
         #print clocks[1]
         # many dups in clocks but too big to sort now - sort later.
+        single.sort()
         clocks.sort()
         result = find_best_multipliers(desired, clocks)
-        print collate_output(desired, result, clocks, clkin)
+        print collate_output(desired, result, single, clkin)
     else:
         # GUI based version
         root = Tk()
