@@ -8,6 +8,7 @@
 
 
 ### Author: M. Schafer Dec 2012
+### Jul 2014 - cascading DCMs
 ### Derived from http://www.xilinx.com/support/documentation/user_guides/ug382.pdf
 
 
@@ -64,6 +65,8 @@ class App: # Build a simple UI
                             textvariable=self.reportvar)
         self.report.pack(side=BOTTOM)
         #
+        self.desired.focus_set()
+        #
         self.clocks = []
         self.lastclk = 0
 
@@ -82,14 +85,14 @@ class App: # Build a simple UI
         if success:
             if len(self.clocks) == 0 or self.lastclk != clkin:
                 # make/remake if input values change
-                self.clocks, self.single = calc_possible_twolayer_clocks(clkin)
-                self.single.sort()
+                self.clocks, self.singlepass = calc_possible_twolayer_clocks(clkin)
+                self.singlepass.sort()
                 self.clocks.sort()
                 self.lastclk = clkin
             result = find_best_multipliers(desired, self.clocks)
             #sort results by r[1] and display as label
             label = "Desired Frequency = %s\n" % desired
-            label += collate_output(desired, result, self.single, clkin)
+            label += collate_output(desired, result, self.singlepass, clkin)
             self.reportvar.set(label)
             print label # if you want to cut and paste
         
@@ -103,7 +106,7 @@ def DCM_clkdiv(clkin, suffix=""):
         clocks.append([freq, "CLKDV", "Set CLKDV_DIV = %s%s" % (i, suffix), clkin])
     return clocks
         
-###
+
 def calc_possible_clocks(clkin=CLOCKIN):
     """ Make a single list of all possible clock frequencies
         - return list of: [freq, using_signals, how, source_clk]
@@ -128,18 +131,20 @@ def calc_possible_clocks(clkin=CLOCKIN):
             clocks.append([f2, 'CLKFX, CLKFX180', msg, clkin])
     return clocks
 
+
 def calc_possible_twolayer_clocks(clkin=CLOCKIN):
     " cascade two DCM units to find all poss frequencies "
     clocks = []
-    direct_clocks = calc_possible_clocks(clkin)
-    clocks.extend(direct_clocks)
-    for c in direct_clocks:
+    singlepass_clocks = calc_possible_clocks(clkin)
+    clocks.extend(singlepass_clocks)
+    for c in singlepass_clocks:
         pass2 = calc_possible_clocks(c[0])
         clocks.extend(pass2)
-    return clocks, direct_clocks
+    return clocks, singlepass_clocks
+
 
 def find_base_frequency(desired_freq, freqs, base_clk):
-    """ look for desired_freq made from base clockin
+    """ look for desired_freq made from base clock
         - freqs is a sorted list
         return list of entires of desired_freq
     """
@@ -160,6 +165,7 @@ def find_base_frequency(desired_freq, freqs, base_clk):
           result.append(i)
     result.sort(key=itemgetter(1))
     return result
+
 
 def find_best_multipliers(desired_freq, clocks):
     """ move through the list until find first value > desired_freq
@@ -205,7 +211,8 @@ def find_best_multipliers(desired_freq, clocks):
     #result.sort(key=itemgetter(1,-1))#, reverse=True)
     result.sort(key=itemgetter(1))
     return result
-        
+
+
 def collate_output(desired, result, clocks, base_clk):
     " Present the result list usefully "
     message = ""
@@ -237,15 +244,14 @@ if __name__ == '__main__':
         desired = float(sys.argv[2])
         print "Desired Frequency = %s" % desired
         #
-        clocks, single = calc_possible_twolayer_clocks(clkin)
+        clocks, singlepass = calc_possible_twolayer_clocks(clkin)
         print "%s clocks evaluated" % (len(clocks))
         #print clocks[0]
-        #print clocks[1]
         # many dups in clocks but too big to sort now - sort later.
-        single.sort()
+        singlepass.sort()
         clocks.sort()
         result = find_best_multipliers(desired, clocks)
-        print collate_output(desired, result, single, clkin)
+        print collate_output(desired, result, singlepass, clkin)
     else:
         # GUI based version
         root = Tk()
