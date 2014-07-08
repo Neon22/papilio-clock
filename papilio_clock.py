@@ -60,7 +60,7 @@ class App: # Build a simple UI
         #
         self.reportvar = StringVar()
         self.reportvar.set("Choose a desired frequency\n\n")
-        self.report = Label(master, width=150, justify=LEFT,
+        self.report = Label(master, width=130, justify=LEFT,
                             textvariable=self.reportvar)
         self.report.pack(side=BOTTOM)
         #
@@ -99,8 +99,8 @@ def DCM_clkdiv(clkin, suffix=""):
     clocks = []
     for i in DCM_CLOCKDIV_RATIOS:
         freq = clkin/float(i)
-        clocks.append([freq, "CLKDV", "For %s MHz: CLKDV_DIV = %s%s" % (freq, i, suffix), clkin])
-        #clocks.append([freq, "CLKDV", "CLKDV_DIV = %s%s" % (i, suffix)])
+        #clocks.append([freq, "CLKDV", "For %s MHz: CLKDV_DIV = %s%s" % (freq, i, suffix), clkin])
+        clocks.append([freq, "CLKDV", "Set CLKDV_DIV = %s%s" % (i, suffix), clkin])
     return clocks
         
 ###
@@ -110,7 +110,8 @@ def calc_possible_clocks(clkin=CLOCKIN):
     """
     clocks = []
     # DCM 2X
-    clocks.append([clkin*2, "CLK2X,CLK2X180", "For %s MHz" % (clkin*2), clkin])
+    #clocks.append([clkin*2, "CLK2X,CLK2X180", "For %s MHz" % (clkin*2), clkin])
+    clocks.append([clkin*2, "CLK2X,CLK2X180", "Set ", clkin])
     # DCM fractional CLKDV
     clocks.extend(DCM_clkdiv(clkin))
     clocks.extend(DCM_clkdiv(clkin/2, " (+CLKIN_DIV_BY_2)"))
@@ -119,8 +120,8 @@ def calc_possible_clocks(clkin=CLOCKIN):
         f1 = (clkin) * i
         for j in range (1,DCM_CLKFX_DIV):
             f2 = f1 / float(j)
-            msg = "For %s MHz: CLKFX_MUL/CLKFX_DIV = %s / %s" % (f2, i, j)
-            #msg = "CLKFX_MUL/CLKFX_DIV = %s / %s" % (i, j)
+            #msg = "For %s MHz: CLKFX_MUL/CLKFX_DIV = %s / %s" % (f2, i, j)
+            msg = "Set CLKFX_MUL/CLKFX_DIV = %s / %s" % (i, j)
             if f2 > 350:   msg += " -Unlikely. (>350MHz. Needs chip speedgrade-3)"
             elif f2 > 250: msg += " -Unlikely. (>250MHz. Needs chip speedgrade-2)"
             elif f2 > 200: msg += " -Possible. (>200MHz. Needs chip speedgrade-2)"
@@ -219,7 +220,7 @@ def collate_output(desired, result, clocks, base_clk):
             message += "\nFor %s MHz. %s  Use: %s. %s from %f MHz." % (r[0], error, r[1], r[2], r[-1])
             sources = find_base_frequency(r[-1], clocks, base_clk)
             for s in sources:
-                message += "\n    - For %s MHz. %s  Use: %s. %s." % (s[0], error, s[1], s[2])
+                message += "\n    - For %f MHz. Use: %s. %s." % (s[0], s[1], s[2])
     return message
 
 
