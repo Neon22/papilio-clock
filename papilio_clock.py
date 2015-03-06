@@ -122,13 +122,14 @@ def calc_possible_clocks(clkin=CLOCKIN):
     for i in range(2,DCM_CLKFX_MUL):
         f1 = (clkin) * i
         for j in range (1,DCM_CLKFX_DIV):
-            f2 = f1 / float(j)
-            #msg = "For %s MHz: CLKFX_MUL/CLKFX_DIV = %s / %s" % (f2, i, j)
-            msg = "Set CLKFX_MUL/CLKFX_DIV = %s / %s" % (i, j)
-            if f2 > 350:   msg += " -Unlikely. (>350MHz. Needs chip speedgrade-3)"
-            elif f2 > 250: msg += " -Unlikely. (>250MHz. Needs chip speedgrade-2)"
-            elif f2 > 200: msg += " -Possible. (>200MHz. Needs chip speedgrade-2)"
-            clocks.append([f2, 'CLKFX, CLKFX180', msg, clkin])
+            if i != j: # ignore equiv of *1
+                f2 = f1 / float(j)
+                #msg = "For %s MHz: CLKFX_MUL/CLKFX_DIV = %s / %s" % (f2, i, j)
+                msg = "Set CLKFX_MUL/CLKFX_DIV = %s / %s" % (i, j)
+                if f2 > 350:   msg += " -Unlikely. (>350MHz. Needs chip speedgrade-3)"
+                elif f2 > 250: msg += " -Unlikely. (>250MHz. Needs chip speedgrade-2)"
+                elif f2 > 200: msg += " -Possible. (>200MHz. Needs chip speedgrade-2)"
+                clocks.append([f2, 'CLKFX, CLKFX180', msg, clkin])
     return clocks
 
 
@@ -258,3 +259,11 @@ if __name__ == '__main__':
         app = App(root)
         root.mainloop()
     
+# Bug:
+#   For 4.26666666667 MHz. Error = 0.000007  Use: CLKDV. Set CLKDV_DIV = 7.5.
+#   For 4.26666666667 MHz. Error = 0.000007  Use: CLKDV. Set CLKDV_DIV = 7.5 (+CLKIN_DIV_BY_2).
+# Todo:
+# IWBNI we could check for several frequencies and refine the choices to the minimum.
+#  - run coltae_output analog just to gather and prune.
+#  - once for each desired freq
+#  - correlate and minimise number of DCM units.
