@@ -12,19 +12,19 @@
 # Nov 2023 - python3, customtkinter
 # Derived from http://www.xilinx.com/support/documentation/user_guides/ug382.pdf
 
+# GUI component
+import customtkinter as ctk
+import sys
+from operator import itemgetter  # used in sort
 
 CLOCKIN = 32  # MHz. The clock frequency supplied to the FPGA
 
 # possibly turn these into a dictionary so can support different devices.
 # is papilio plus, duo different ?
-DCM_CLOCKDIV_RATIOS = [1.5,2,2.5,3,3.5,4,4.5,5,5.5,6,6.5,7,7.5,8,9,10,11,12,13,14,15,16]
+DCM_CLOCKDIV_RATIOS = [1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5, 5.5,
+                       6, 6.5, 7, 7.5, 8, 9, 10, 11, 12, 13, 14, 15, 16]
 DCM_CLKFX_MUL = 32
 DCM_CLKFX_DIV = 32
-
-# GUI component
-import customtkinter as ctk
-import sys
-from operator import itemgetter  # used in sort
 
 
 class App(ctk.CTk):  # Build a simple UI
@@ -36,7 +36,7 @@ class App(ctk.CTk):  # Build a simple UI
         # Top frame
         topframe = ctk.CTkFrame(self)
         topframe.pack()
-        label  = "The Spartan6 FPGA has clock modules composed of two DCM units and a PLL."
+        label = "The Spartan6 FPGA has clock modules composed of two DCM units and a PLL."
         # label += "\nThe DCM units can be chained together."
         label += "\nThis helper calculates the ways a desired clock can be generated using one or both DCMs."
         label += "\nIt shows the exact clock if possible. Or the clocks below and above if not."
@@ -98,7 +98,7 @@ class App(ctk.CTk):  # Build a simple UI
                 self.report.delete('0.0', "end")
             self.report.insert("0.0", label)
             print(label)  # if you want to cut and paste
-        
+
 
 def DCM_clkdiv(clkin, suffix=""):
     """ Calc all frequencies if using CLKDV output """
@@ -108,7 +108,7 @@ def DCM_clkdiv(clkin, suffix=""):
         # clocks.append([freq, "CLKDV", "For %s MHz: CLKDV_DIV = %s%s" % (freq, i, suffix), clkin])
         clocks.append([freq, "CLKDV", "Set CLKDV_DIV = %s%s" % (i, suffix), clkin])
     return clocks
-        
+
 
 def calc_possible_clocks(clkin=CLOCKIN):
     """ Make a single list of all possible clock frequencies
@@ -125,7 +125,7 @@ def calc_possible_clocks(clkin=CLOCKIN):
     for i in range(2,DCM_CLKFX_MUL):
         f1 = (clkin) * i
         for j in range (1,DCM_CLKFX_DIV):
-            if i != j: # ignore equiv of *1
+            if i != j:  # ignore equiv of *1
                 f2 = f1 / float(j)
                 # msg = "For %s MHz: CLKFX_MUL/CLKFX_DIV = %s / %s" % (f2, i, j)
                 msg = "Set CLKFX_MUL/CLKFX_DIV = %s / %s" % (i, j)
