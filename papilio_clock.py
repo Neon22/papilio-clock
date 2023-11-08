@@ -122,16 +122,19 @@ def calc_possible_clocks(clkin=CLOCKIN):
     clocks.extend(DCM_clkdiv(clkin))
     clocks.extend(DCM_clkdiv(clkin/2, " (+CLKIN_DIV_BY_2)"))
     # DCM Synthesis
-    for i in range(2,DCM_CLKFX_MUL):
+    for i in range(2, DCM_CLKFX_MUL):
         f1 = (clkin) * i
-        for j in range (1,DCM_CLKFX_DIV):
+        for j in range(1, DCM_CLKFX_DIV):
             if i != j:  # ignore equiv of *1
                 f2 = f1 / float(j)
                 # msg = "For %s MHz: CLKFX_MUL/CLKFX_DIV = %s / %s" % (f2, i, j)
                 msg = "Set CLKFX_MUL/CLKFX_DIV = %s / %s" % (i, j)
-                if f2 > 350:   msg += " -Unlikely. (>350MHz. Needs chip speedgrade-3)"
-                elif f2 > 250: msg += " -Unlikely. (>250MHz. Needs chip speedgrade-2)"
-                elif f2 > 200: msg += " -Possible. (>200MHz. Needs chip speedgrade-2)"
+                if f2 > 350:
+                    msg += " -Unlikely. (>350MHz. Needs chip speedgrade-3)"
+                elif f2 > 250:
+                    msg += " -Unlikely. (>250MHz. Needs chip speedgrade-2)"
+                elif f2 > 200:
+                    msg += " -Possible. (>200MHz. Needs chip speedgrade-2)"
                 clocks.append([f2, 'CLKFX, CLKFX180', msg, clkin])
     return clocks
 
@@ -166,7 +169,7 @@ def find_base_frequency(desired_freq, freqs, base_clk):
     result = []
     for i in temp:
         if i not in result:
-          result.append(i)
+            result.append(i)
     result.sort(key=itemgetter(1))
     return result
 
@@ -177,7 +180,7 @@ def find_best_multipliers(desired_freq, clocks):
         - Collect the multipler(s) for the next highest frequency
     """
     # initial values
-    clk = [1,0,0]
+    clk = [1, 0, 0]
     low = [clocks[0]]
     high = [clocks[-1]]
     # begin searching for desired_freq
@@ -193,14 +196,14 @@ def find_best_multipliers(desired_freq, clocks):
             # next will be one or more matches equal or above
             high = [clocks[i]]
             diff = high[0][0] - desired_freq
-            j = i+1
-            while j < len(clocks) and clocks[j][0] <= desired_freq+diff:
+            j = i + 1
+            while j < len(clocks) and clocks[j][0] <= desired_freq + diff:
                     high.append(clocks[j])
                     j += 1
             break
     # gather nicely
     # forget low if high error == 0. I.e. exact match to desired
-    if high[0][0] - desired_freq ==0:
+    if high[0][0] - desired_freq == 0:
         temp = high
     else:
         # no exact match - show low and high
@@ -211,7 +214,7 @@ def find_best_multipliers(desired_freq, clocks):
     result = []
     for i in temp:
         if i not in result:
-          result.append(i)
+            result.append(i)
     # result.sort(key=itemgetter(1,-1))#, reverse=True)
     result.sort(key=itemgetter(1))
     return result
@@ -246,7 +249,7 @@ if __name__ == '__main__':
         # called from command line - ignore UI
         clkin = float(sys.argv[1])
         desired = float(sys.argv[2])
-        print("Desired Frequency = %s" % desired)
+        print("Desired Frequency = %s" % (desired))
         #
         clocks, singlepass = calc_possible_twolayer_clocks(clkin)
         print("%s clocks evaluated" % (len(clocks)))
@@ -260,7 +263,7 @@ if __name__ == '__main__':
         # GUI based version
         app = App()
         app.mainloop()
-    
+
 # Bug:
 #   For 4.26666666667 MHz. Error = 0.000007  Use: CLKDV. Set CLKDV_DIV = 7.5.
 #   For 4.26666666667 MHz. Error = 0.000007  Use: CLKDV. Set CLKDV_DIV = 7.5 (+CLKIN_DIV_BY_2).
