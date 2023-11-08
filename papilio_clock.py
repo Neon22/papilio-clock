@@ -1,19 +1,19 @@
 #!/usr/bin/python3
 
-### Papilio Plus clock helper
-### given a desired frequency - find the best multipliers to get what you need.
+# Papilio Plus clock helper
+# given a desired frequency - find the best multipliers to get what you need.
 
-### The incoming clock to a DCM can be manipulated in a numbe of ways to get a given frequency.
-### So finding a good set of values to get close to a required frequency would be useful.
-
-
-### Author: M. Schafer Dec 2012
-### Jul 2014 - cascading DCMs
-### Nov 2023 - python3, customtkinter
-### Derived from http://www.xilinx.com/support/documentation/user_guides/ug382.pdf
+# The incoming clock to a DCM can be manipulated in a numbe of ways to get a given frequency.
+# So finding a good set of values to get close to a required frequency would be useful.
 
 
-CLOCKIN = 32 # MHz. The clock frequency supplied to the FPGA
+# Author: M. Schafer Dec 2012
+# Jul 2014 - cascading DCMs
+# Nov 2023 - python3, customtkinter
+# Derived from http://www.xilinx.com/support/documentation/user_guides/ug382.pdf
+
+
+CLOCKIN = 32  # MHz. The clock frequency supplied to the FPGA
 
 # possibly turn these into a dictionary so can support different devices.
 # is papilio plus, duo different ?
@@ -21,7 +21,7 @@ DCM_CLOCKDIV_RATIOS = [1.5,2,2.5,3,3.5,4,4.5,5,5.5,6,6.5,7,7.5,8,9,10,11,12,13,1
 DCM_CLKFX_MUL = 32
 DCM_CLKFX_DIV = 32
 
-### GUI component
+# GUI component
 import customtkinter as ctk
 import sys
 from operator import itemgetter  # used in sort
