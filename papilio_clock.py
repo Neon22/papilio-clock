@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 
 ### Papilio Plus clock helper
 ### given a desired frequency - find the best multipliers to get what you need.
@@ -9,6 +9,7 @@
 
 ### Author: M. Schafer Dec 2012
 ### Jul 2014 - cascading DCMs
+### Nov 2023 - python3, customtkinter
 ### Derived from http://www.xilinx.com/support/documentation/user_guides/ug382.pdf
 
 
@@ -21,49 +22,49 @@ DCM_CLKFX_MUL = 32
 DCM_CLKFX_DIV = 32
 
 ### GUI component
-from Tkinter import *
+import customtkinter as ctk
 import sys
-from operator import itemgetter # used in sort
+from operator import itemgetter  # used in sort
 
 
-class App: # Build a simple UI
-    def __init__(self, master):
+class App(ctk.CTk):  # Build a simple UI
+    def __init__(self):
+        super().__init__()
+        self.geometry("750x560")
+        self.title("Papilio Clock helper")
         # setup entry field, calculate button and report.
-        master.title("Papilio Clock helper")
         # Top frame
-        topframe = Frame(master)
+        topframe = ctk.CTkFrame(self)
         topframe.pack()
         label  = "The Spartan6 FPGA has clock modules composed of two DCM units and a PLL."
-        #label += "\nThe DCM units can be chained together."
+        # label += "\nThe DCM units can be chained together."
         label += "\nThis helper calculates the ways a desired clock can be generated using one or both DCMs."
         label += "\nIt shows the exact clock if possible. Or the clocks below and above if not."
         label += "\n(If window overflows - consult console for full list)"
-        Ltop = Label(topframe, text=label)
-        Ltop.pack(side=LEFT)
-        inputframe = Frame(master)
+        Ltop = ctk.CTkLabel(topframe, text=label, padx=10, pady=2)
+        Ltop.pack(side=ctk.LEFT)
+        inputframe = ctk.CTkFrame(self)
         inputframe.pack()
         # Input frame
-        L1 = Label(inputframe, text="Source Clock")
-        L1.pack(side=LEFT)
-        self.clkin = Entry(inputframe, width=20)
+        L1 = ctk.CTkLabel(inputframe, text="Source Clock", padx=10, pady=5)
+        L1.pack(side=ctk.LEFT, expand=True)
+        self.clkin = ctk.CTkEntry(inputframe, width=60)
         self.clkin.insert(0, CLOCKIN)
-        self.clkin.pack(side=LEFT)
-        L2 = Label(inputframe, text="Desired frequency")
-        L2.pack(side=LEFT)
-        self.desired = Entry(inputframe, width=20)
-        self.desired.pack(side=LEFT)
+        self.clkin.pack(side=ctk.LEFT)
+        L2 = ctk.CTkLabel(inputframe, text="Desired frequency", padx=10, pady=5)
+        L2.pack(side=ctk.LEFT)
+        self.desired = ctk.CTkEntry(inputframe, width=60)
+        self.desired.pack(side=ctk.LEFT, padx=2, pady=2)
         # Button frame
-        buttonframe = Frame(master)
+        buttonframe = ctk.CTkFrame(self)
         buttonframe.pack()
-        self.calc = Button(buttonframe, text="Calculate", command=self.calculate)
-        self.calc.pack(side=LEFT)
+        self.calc = ctk.CTkButton(buttonframe, text="Calculate", command=self.calculate)
+        self.calc.pack(side=ctk.LEFT)
         self.desired.bind("<Return>", self.calculate)
         #
-        self.reportvar = StringVar()
-        self.reportvar.set("Choose a desired frequency\n\n")
-        self.report = Label(master, width=130, justify=LEFT,
-                            textvariable=self.reportvar)
-        self.report.pack(side=BOTTOM)
+        self.report = ctk.CTkTextbox(master=self,  padx=5, pady=5)
+        self.report.configure(wrap="none", border_width=1)
+        self.report.pack(side=ctk.BOTTOM, expand=True, fill=ctk.BOTH)
         #
         self.desired.focus_set()
         #
@@ -90,11 +91,13 @@ class App: # Build a simple UI
                 self.clocks.sort()
                 self.lastclk = clkin
             result = find_best_multipliers(desired, self.clocks)
-            #sort results by r[1] and display as label
+            # sort results by r[1] and display as label
             label = "Desired Frequency = %s\n" % desired
             label += collate_output(desired, result, self.singlepass, clkin)
-            self.reportvar.set(label)
-            print label # if you want to cut and paste
+            if self.report.get('0.0'):
+                self.report.delete('0.0', "end")
+            self.report.insert("0.0", label)
+            print(label)  # if you want to cut and paste
         
 
 def DCM_clkdiv(clkin, suffix=""):
@@ -102,7 +105,7 @@ def DCM_clkdiv(clkin, suffix=""):
     clocks = []
     for i in DCM_CLOCKDIV_RATIOS:
         freq = clkin/float(i)
-        #clocks.append([freq, "CLKDV", "For %s MHz: CLKDV_DIV = %s%s" % (freq, i, suffix), clkin])
+        # clocks.append([freq, "CLKDV", "For %s MHz: CLKDV_DIV = %s%s" % (freq, i, suffix), clkin])
         clocks.append([freq, "CLKDV", "Set CLKDV_DIV = %s%s" % (i, suffix), clkin])
     return clocks
         
@@ -113,7 +116,7 @@ def calc_possible_clocks(clkin=CLOCKIN):
     """
     clocks = []
     # DCM 2X
-    #clocks.append([clkin*2, "CLK2X,CLK2X180", "For %s MHz" % (clkin*2), clkin])
+    # clocks.append([clkin*2, "CLK2X,CLK2X180", "For %s MHz" % (clkin*2), clkin])
     clocks.append([clkin*2, "CLK2X,CLK2X180", "Set ", clkin])
     # DCM fractional CLKDV
     clocks.extend(DCM_clkdiv(clkin))
@@ -124,7 +127,7 @@ def calc_possible_clocks(clkin=CLOCKIN):
         for j in range (1,DCM_CLKFX_DIV):
             if i != j: # ignore equiv of *1
                 f2 = f1 / float(j)
-                #msg = "For %s MHz: CLKFX_MUL/CLKFX_DIV = %s / %s" % (f2, i, j)
+                # msg = "For %s MHz: CLKFX_MUL/CLKFX_DIV = %s / %s" % (f2, i, j)
                 msg = "Set CLKFX_MUL/CLKFX_DIV = %s / %s" % (i, j)
                 if f2 > 350:   msg += " -Unlikely. (>350MHz. Needs chip speedgrade-3)"
                 elif f2 > 250: msg += " -Unlikely. (>250MHz. Needs chip speedgrade-2)"
@@ -179,14 +182,14 @@ def find_best_multipliers(desired_freq, clocks):
     high = [clocks[-1]]
     # begin searching for desired_freq
     for i in range(len(clocks)):
-        diff = clocks[i][0] - clk[0] # is this a multiple
+        diff = clocks[i][0] - clk[0]  # is this a multiple
         clk = clocks[i]
         if clocks[i][0] < desired_freq:
-            if diff == 0: #multiple at this frequency
+            if diff == 0:  # multiple at this frequency
                 low.append(clocks[i])
-            else: # only one so start a new list
+            else:  # only one so start a new list
                 low = [clocks[i]]
-        else: # we are at, or near, the desired_freq.
+        else:  # we are at, or near, the desired_freq.
             # next will be one or more matches equal or above
             high = [clocks[i]]
             diff = high[0][0] - desired_freq
@@ -202,14 +205,14 @@ def find_best_multipliers(desired_freq, clocks):
     else:
         # no exact match - show low and high
         temp = low
-        if high[0][0] != low[0][0]: # cleanup if first clock
+        if high[0][0] != low[0][0]:  # cleanup if first clock
             temp.extend(high)
     #remove duplicates
     result = []
     for i in temp:
         if i not in result:
           result.append(i)
-    #result.sort(key=itemgetter(1,-1))#, reverse=True)
+    # result.sort(key=itemgetter(1,-1))#, reverse=True)
     result.sort(key=itemgetter(1))
     return result
 
@@ -232,32 +235,31 @@ def collate_output(desired, result, clocks, base_clk):
     return message
 
 
-###
+# --------------------------
 if __name__ == '__main__':
     # check argv to see if being called by command line - in which case demand two args and ignore UI
-    print sys.argv, len(sys.argv)
+    print(sys.argv, len(sys.argv))
     if len(sys.argv) == 2:
         # print usage
-        print "Usage: papilio_clock clock_freq desired_freq"
+        print("Usage: papilio_clock clock_freq desired_freq")
     if len(sys.argv) == 3:
         # called from command line - ignore UI
         clkin = float(sys.argv[1])
         desired = float(sys.argv[2])
-        print "Desired Frequency = %s" % desired
+        print("Desired Frequency = %s" % desired)
         #
         clocks, singlepass = calc_possible_twolayer_clocks(clkin)
-        print "%s clocks evaluated" % (len(clocks))
-        #print clocks[0]
+        print("%s clocks evaluated" % (len(clocks)))
+        # print clocks[0]
         # many dups in clocks but too big to sort now - sort later.
         singlepass.sort()
         clocks.sort()
         result = find_best_multipliers(desired, clocks)
-        print collate_output(desired, result, singlepass, clkin)
+        print(collate_output(desired, result, singlepass, clkin))
     else:
         # GUI based version
-        root = Tk()
-        app = App(root)
-        root.mainloop()
+        app = App()
+        app.mainloop()
     
 # Bug:
 #   For 4.26666666667 MHz. Error = 0.000007  Use: CLKDV. Set CLKDV_DIV = 7.5.
